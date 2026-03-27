@@ -14,7 +14,6 @@ ACKNOWLEDGEMENTS = [
     "markdown2",
     "xhtml2pdf + reportlab",
     "customtkinter",
-    "tkinterdnd2",
     "pystray + Pillow",
     "JetBrains Mono (OFL 1.1)",
 ]

@@ -22,7 +22,6 @@ from printwell.constants import (
 from printwell.converter.clipboard import copy_html_to_clipboard
 from printwell.converter.markdown_parser import md_to_html, wrap_html
 from printwell.converter.pdf_writer import html_to_pdf
-from printwell.ui.dialogs import OverwriteDialog
 
 log = logging.getLogger(__name__)
 
@@ -126,25 +125,55 @@ class MainWindow:
     # --------------------------------------------------------- Drag & drop
 
     def _setup_drop_target(self) -> None:
-        """Register the root window as a drag-and-drop target.
+        """Register an OLE drop target for Explorer files and Outlook attachments."""
+        import ctypes
+        import ctypes.wintypes as wt
 
-        Requires tkinterdnd2 to be loaded in the root (see app.py).
-        Falls back gracefully if unavailable.
-        """
-        try:
-            self._root.drop_target_register("DND_Files")  # type: ignore[attr-defined]
-            self._root.dnd_bind("<<Drop>>", self._on_drop)  # type: ignore[attr-defined]
-            log.debug("Drag-and-drop registered on root window")
-        except (AttributeError, Exception):
-            log.debug("Drag-and-drop not available, browse only")
+        from printwell.utils.drop_target import register_drop_target
 
-    def _on_drop(self, event: object) -> None:
-        """Handle a file dropped onto the window."""
-        # tkinterdnd2 wraps paths with spaces in braces: {C:\path with spaces\f.md}
-        raw = getattr(event, "data", "")
-        path_str = raw.strip().strip("{}")
-        if path_str:
-            self._load_file(Path(path_str))
+        self._root.update_idletasks()
+        inner_hwnd = self._root.winfo_id()
+
+        # Walk up to the top-level frame window — customtkinter child widgets
+        # may cover the inner HWND, so we register on every ancestor too.
+        GA_ROOT = 2
+        ctypes.windll.user32.GetAncestor.argtypes = [wt.HWND, wt.UINT]
+        ctypes.windll.user32.GetAncestor.restype = wt.HWND
+        root_hwnd = ctypes.windll.user32.GetAncestor(inner_hwnd, GA_ROOT)
+
+        def _on_file_dropped(path: Path) -> None:
+            try:
+                self._load_file(path)
+            except Exception:
+                log.error("Error loading dropped file", exc_info=True)
+
+        self._drop_targets: list = []
+        hwnds: set[int] = set()
+
+        # Collect ancestors: inner -> parent -> ... -> root
+        ctypes.windll.user32.GetParent.argtypes = [wt.HWND]
+        ctypes.windll.user32.GetParent.restype = wt.HWND
+        hwnd = inner_hwnd
+        while hwnd:
+            hwnds.add(hwnd)
+            if hwnd == root_hwnd:
+                break
+            hwnd = ctypes.windll.user32.GetParent(hwnd)
+
+        # Also collect ALL child windows (widgets, frames, etc.)
+        WNDENUMPROC = ctypes.WINFUNCTYPE(wt.BOOL, wt.HWND, wt.LPARAM)
+
+        @WNDENUMPROC
+        def _enum_cb(child_hwnd, _lparam):
+            hwnds.add(child_hwnd)
+            return True
+
+        ctypes.windll.user32.EnumChildWindows(root_hwnd, _enum_cb, 0)
+
+        for h in hwnds:
+            dt = register_drop_target(h, _on_file_dropped)
+            if dt is not None:
+                self._drop_targets.append(dt)
 
     # ------------------------------------------------------------ Actions
 
@@ -196,21 +225,24 @@ class MainWindow:
         log.info("Loaded file: %s", path)
 
     def _on_export_pdf(self) -> None:
-        """Export the current Markdown to PDF."""
+        """Export the current Markdown to PDF via a Save As dialog."""
         if not self._source_path or not self._html_body:
             return
 
-        dest = self._source_path.with_suffix(".pdf")
+        from tkinter import filedialog
 
-        # Check for existing file
-        if dest.exists():
-            dialog = OverwriteDialog(self._root, dest)
-            self._root.wait_window(dialog)
-            dest = dialog.result
-            if dest is None:
-                self._set_status("Export cancelled", COLOR_INFO)
-                return
+        dest = filedialog.asksaveasfilename(
+            title="Export PDF",
+            initialdir=str(self._source_path.parent),
+            initialfile=self._source_path.with_suffix(".pdf").name,
+            defaultextension=".pdf",
+            filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")],
+        )
+        if not dest:
+            self._set_status("Export cancelled", COLOR_INFO)
+            return
 
+        dest = Path(dest)
         self._set_status("Exporting PDF...", COLOR_INFO)
         self._export_btn.configure(state="disabled")
 

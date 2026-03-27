@@ -8,9 +8,8 @@ Drop a file, get a PDF. No fuss, no cloud, no subscriptions.
 
 ## Features
 
-- **Drag-and-drop or browse** -- navigate to a `.md` file or drop it straight onto the window
-- **One-click PDF export** -- writes a styled PDF to the same directory with the same filename
-- **Smart overwrite handling** -- prompts to overwrite or auto-rename if the destination PDF already exists
+- **Drag-and-drop or browse** -- navigate to a `.md` file or drop it straight onto the window; also accepts attachments dragged directly from Outlook
+- **PDF export with Save As** -- choose where to save the PDF via a standard Save dialog (defaults to the source file's directory and name)
 - **Rich text clipboard** -- copies the rendered Markdown as formatted text, ready to paste into Word, Outlook, Teams, etc.
 - **System tray app** -- runs quietly in the tray, accessible from the taskbar or a desktop shortcut
 - **Launches on startup** -- always ready when you need it
@@ -61,8 +60,7 @@ Uninstall silently:
 1. **Launch** Printwell from the Start Menu or run from source
 2. **Open a file** -- click Browse or drag a `.md` file onto the window
 3. A preview of the rendered Markdown appears in the main panel
-4. Click **Export PDF** -- the PDF is written next to the source file (e.g., `notes.md` -> `notes.pdf`)
-5. If the PDF already exists, choose **Overwrite** or **Rename** (appends a number)
+4. Click **Export PDF** -- a Save dialog opens, defaulting to the same name and directory as the source file
 6. Click **Copy Rich Text** to put the formatted content on your clipboard, then paste into Word, Outlook, or anywhere that accepts rich text
 
 ## Project Structure
@@ -88,6 +86,7 @@ src/printwell/
 │   ├── tray.py              # System tray icon (pystray)
 │   └── theme.py             # customtkinter dark + blue theme
 └── utils/
+    ├── drop_target.py       # OLE drag-and-drop (Explorer + Outlook attachments)
     ├── paths.py             # %APPDATA%\Printwell directories
     └── logging_setup.py     # File + console logging
 ```
@@ -119,11 +118,22 @@ The installer is written to `installer_output\PrintwellSetup.exe`.
 - **markdown2** -- Markdown to HTML conversion with extras (tables, fenced code, etc.)
 - **xhtml2pdf** -- HTML/CSS to PDF rendering
 - **customtkinter** -- Modern dark-themed UI
-- **tkinterdnd2** -- Native drag-and-drop support
 - **pystray + Pillow** -- System tray icon
-- **pywin32** -- Rich text clipboard operations
+- **pywin32** -- Rich text clipboard and OLE drag-and-drop
 - **PyInstaller + Inno Setup** -- Build and install
 - **[JetBrains Mono](https://www.jetbrains.com/lp/mono/)** -- Bundled monospace font for code blocks ([OFL 1.1](src/printwell/fonts/OFL.txt))
+
+## Changelog
+
+### 1.0.1
+
+- **Outlook drag-and-drop** -- drag `.md` attachments directly from Outlook into the app window; virtual files are extracted and loaded automatically
+- **Save As dialog for PDF export** -- PDF export now opens a Save dialog instead of silently writing next to the source file, making it easy to choose a different location (useful when the source is in a temp directory)
+- Replaced tkinterdnd2 with a custom OLE drop target for broader drag-and-drop compatibility
+
+### 1.0.0
+
+- Initial release
 
 ## Contact
 

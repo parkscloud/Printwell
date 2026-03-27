@@ -17,21 +17,8 @@ log = logging.getLogger(__name__)
 
 
 def _make_root() -> ctk.CTk:
-    """Create the root window, with drag-and-drop support if available."""
-    try:
-        from tkinterdnd2 import TkinterDnD
-
-        class DnDCTk(ctk.CTk, TkinterDnD.DnDWrapper):
-            def __init__(self, *args, **kwargs):
-                super().__init__(*args, **kwargs)
-                self.TkdndVersion = TkinterDnD._require(self)
-
-        log.debug("tkinterdnd2 loaded, drag-and-drop enabled")
-        return DnDCTk()
-
-    except Exception:
-        log.debug("tkinterdnd2 not available, drag-and-drop disabled")
-        return ctk.CTk()
+    """Create the root window."""
+    return ctk.CTk()
 
 
 class PrintwellApp:

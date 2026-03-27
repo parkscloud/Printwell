@@ -27,11 +27,12 @@ Version must be updated in **three places** before a release:
 
 **Flow:** Markdown → HTML (markdown2) → PDF (xhtml2pdf) or clipboard (CF_HTML via win32clipboard).
 
-- **app.py** — Orchestrator. Creates a DnD-enabled root window (`DnDCTk` mixin combining `ctk.CTk` + `TkinterDnD.DnDWrapper`), starts pystray tray icon in a daemon thread, builds the main window. Close minimizes to tray; "Quit" from tray exits. Command-line `.md` argument auto-loads.
+- **app.py** — Orchestrator. Creates a `ctk.CTk` root window, starts pystray tray icon in a daemon thread, builds the main window. Close minimizes to tray; "Quit" from tray exits. Command-line `.md` argument auto-loads.
 - **converter/markdown_parser.py** — `md_to_html()` produces an HTML fragment; `wrap_html()` wraps it in a full document with CSS.
 - **converter/pdf_writer.py** — Registers bundled JetBrains Mono fonts with reportlab and xhtml2pdf, then renders HTML to PDF.
 - **converter/clipboard.py** — Inlines styles on HTML elements, converts `\n` to `<br>` in `<pre>` blocks, then builds a CF_HTML envelope for the Windows clipboard.
-- **ui/main_window.py** — Builds all widgets into the root window (not a Toplevel). Handles browse, drag-drop, preview, PDF export (threaded), and clipboard copy.
+- **ui/main_window.py** — Builds all widgets into the root window (not a Toplevel). Handles browse, drag-drop (via OLE drop target), preview, PDF export (Save As dialog, threaded), and clipboard copy.
+- **utils/drop_target.py** — OLE IDropTarget implemented with ctypes. Handles Explorer file drops (CF_HDROP) and Outlook attachment drops (FileGroupDescriptorW/FileContents virtual-file protocol). Registers on all ancestor and child HWNDs of the root window.
 
 ## Critical Workarounds
 
@@ -39,11 +40,11 @@ Version must be updated in **three places** before a release:
 
 **Clipboard styles (clipboard.py):** Word and Outlook ignore `<style>` blocks in pasted CF_HTML. All critical styles must be inlined on the elements themselves (`<pre>`, `<code>`, `<table>`, `<th>`, `<td>`, headings, blockquotes). Newlines in `<pre>` must be replaced with `<br>` or Word renders them as paragraph breaks with extra spacing.
 
-**Drag-and-drop (app.py):** `ctk.CTk` doesn't support tkinterdnd2 natively. The `DnDCTk` class uses multiple inheritance to mix in `TkinterDnD.DnDWrapper`. The main window builds into this root directly (not a Toplevel) so DnD events propagate. Falls back to browse-only if tkinterdnd2 is unavailable.
+**Drag-and-drop (utils/drop_target.py):** OLE IDropTarget is implemented entirely with ctypes, bypassing pywin32's COM gateway (which wraps objects in a `DesignatedWrapPolicy` that doesn't forward vtable method calls). The drop target is registered on all ancestor and child HWNDs of the root window to ensure the correct window receives drag events regardless of customtkinter's internal window hierarchy. Supports both CF_HDROP (Explorer) and FileGroupDescriptorW/FileContents (Outlook virtual files).
 
 ## PyInstaller Bundling
 
-The spec (`Printwell.spec`) must `collect_all` for: customtkinter, tkinterdnd2, xhtml2pdf, **and reportlab** (reportlab.graphics.barcode submodules are dynamically imported and missed otherwise). Fonts and the `.ico` are bundled as data files under `printwell/`.
+The spec (`Printwell.spec`) must `collect_all` for: customtkinter, xhtml2pdf, **and reportlab** (reportlab.graphics.barcode submodules are dynamically imported and missed otherwise). Fonts and the `.ico` are bundled as data files under `printwell/`.
 
 ## Style Conventions
 

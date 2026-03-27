@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=Printwell
-AppVersion=1.0.0
-AppPublisher=Printwell
+AppVersion=1.0.1
+AppPublisher=raparks@icloud.com
 AppPublisherURL=https://github.com/parkscloud/Printwell
 DefaultDirName={autopf}\Printwell
 DefaultGroupName=Printwell

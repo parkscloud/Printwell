@@ -6,11 +6,9 @@ datas = [
     ('src\\printwell\\printwell.ico', 'printwell'),
 ]
 binaries = []
-hiddenimports = ['customtkinter', 'pystray', 'tkinterdnd2', 'markdown2', 'xhtml2pdf']
+hiddenimports = ['customtkinter', 'pystray', 'markdown2', 'xhtml2pdf', 'pythoncom']
 
 tmp_ret = collect_all('customtkinter')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-tmp_ret = collect_all('tkinterdnd2')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('xhtml2pdf')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
