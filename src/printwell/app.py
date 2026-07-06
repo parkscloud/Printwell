@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import logging
-import sys
 import threading
+from pathlib import Path
 
 import customtkinter as ctk
 
@@ -24,7 +24,7 @@ def _make_root() -> ctk.CTk:
 class PrintwellApp:
     """Main application class."""
 
-    def __init__(self) -> None:
+    def __init__(self, start_minimized: bool = False) -> None:
         self._config_manager = ConfigManager()
         self._config = self._config_manager.config
 
@@ -33,11 +33,15 @@ class PrintwellApp:
 
         # Root window IS the main window (enables DnD on the whole surface)
         self._root = _make_root()
+        if start_minimized:
+            # Withdraw before any widgets build or idle tasks run, so the
+            # window is never mapped and cannot flash on screen
+            self._root.withdraw()
         self._main_window = None
         self._tray: SystemTrayIcon | None = None
 
-    def run(self) -> None:
-        """Start the application."""
+    def run(self, file: Path | None = None) -> None:
+        """Start the application, optionally loading *file* on launch."""
         log.info("Starting %s", APP_NAME)
 
         # Start system tray in daemon thread
@@ -56,11 +60,8 @@ class PrintwellApp:
         self._main_window = MainWindow(self._root, on_close=self._hide_window)
 
         # If a .md file was passed on the command line, load it
-        if len(sys.argv) > 1:
-            from pathlib import Path
-            file_path = Path(sys.argv[1])
-            if file_path.exists():
-                self._main_window._load_file(file_path)
+        if file is not None and file.exists():
+            self._main_window._load_file(file)
 
         self._root.mainloop()
 

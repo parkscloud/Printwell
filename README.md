@@ -125,6 +125,10 @@ The installer is written to `installer_output\PrintwellSetup.exe`.
 
 ## Changelog
 
+### 1.0.2
+
+- **Start minimized with Windows** -- the "Start Printwell with Windows" option now launches the app hidden in the system tray instead of opening the main window (new `--minimized` flag on the startup shortcut)
+
 ### 1.0.1
 
 - **Outlook drag-and-drop** -- drag `.md` attachments directly from Outlook into the app window; virtual files are extracted and loaded automatically

@@ -14,6 +14,9 @@ PYTHONPATH=src python -m printwell
 # Run with a file argument (simulates file association)
 PYTHONPATH=src python -m printwell path/to/file.md
 
+# Start hidden in the tray (what the installer's startup shortcut passes)
+PYTHONPATH=src python -m printwell --minimized
+
 # Build installer (two steps)
 build.bat                                                    # PyInstaller → dist\Printwell\
 "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss # Inno Setup → installer_output\PrintwellSetup.exe
@@ -34,7 +37,7 @@ Version must be updated in **three places** before a release:
 
 **Flow:** Markdown → HTML (markdown2) → PDF (xhtml2pdf) or clipboard (CF_HTML via win32clipboard).
 
-- **app.py** — Orchestrator. Creates a `ctk.CTk` root window, starts pystray tray icon in a daemon thread, builds the main window. Close minimizes to tray; "Quit" from tray exits. Command-line `.md` argument auto-loads.
+- **app.py** — Orchestrator. Creates a `ctk.CTk` root window, starts pystray tray icon in a daemon thread, builds the main window. Close minimizes to tray; "Quit" from tray exits. Command-line `.md` argument auto-loads; `--minimized` starts withdrawn to the tray (a file argument overrides it).
 - **converter/markdown_parser.py** — `md_to_html()` produces an HTML fragment; `wrap_html()` wraps it in a full document with CSS.
 - **converter/pdf_writer.py** — Registers bundled JetBrains Mono fonts with reportlab and xhtml2pdf, then renders HTML to PDF.
 - **converter/clipboard.py** — Inlines styles on HTML elements, converts `\n` to `<br>` in `<pre>` blocks, then builds a CF_HTML envelope for the Windows clipboard.

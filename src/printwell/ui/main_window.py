@@ -132,6 +132,16 @@ class MainWindow:
         from printwell.utils.drop_target import register_drop_target
 
         self._root.update_idletasks()
+
+        # Force HWND creation for every widget: when starting minimized the
+        # window is withdrawn and never mapped, so Tk hasn't created the child
+        # HWNDs yet and EnumChildWindows below would miss them.
+        def _realize(widget) -> None:
+            widget.winfo_id()
+            for child in widget.winfo_children():
+                _realize(child)
+
+        _realize(self._root)
         inner_hwnd = self._root.winfo_id()
 
         # Walk up to the top-level frame window — customtkinter child widgets

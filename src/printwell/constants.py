@@ -1,7 +1,7 @@
 """Application constants and defaults."""
 
 APP_NAME = "Printwell"
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.0.2"
 APP_AUTHOR = "Robert Parks"
 
 # Supported input extensions

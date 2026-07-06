@@ -3,7 +3,7 @@
 
 [Setup]
 AppName=Printwell
-AppVersion=1.0.1
+AppVersion=1.0.2
 AppPublisher=raparks@icloud.com
 AppPublisherURL=https://github.com/parkscloud/Printwell
 DefaultDirName={autopf}\Printwell
@@ -36,7 +36,7 @@ Source: "dist\Printwell\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdir
 Name: "{group}\Printwell"; Filename: "{app}\Printwell.exe"; IconFilename: "{app}\Printwell.exe"
 Name: "{group}\Uninstall Printwell"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\Printwell"; Filename: "{app}\Printwell.exe"; IconFilename: "{app}\Printwell.exe"; Tasks: desktopicon
-Name: "{commonstartup}\Printwell"; Filename: "{app}\Printwell.exe"; Tasks: startupicon
+Name: "{commonstartup}\Printwell"; Filename: "{app}\Printwell.exe"; Parameters: "--minimized"; Tasks: startupicon
 
 [Registry]
 ; File association: .md files
