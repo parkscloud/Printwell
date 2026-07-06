@@ -5,6 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Run
 
 ```bash
+# First-time setup
+pip install -r requirements.txt
+
 # Run from source (from project root)
 PYTHONPATH=src python -m printwell
 
@@ -15,6 +18,10 @@ PYTHONPATH=src python -m printwell path/to/file.md
 build.bat                                                    # PyInstaller → dist\Printwell\
 "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss # Inno Setup → installer_output\PrintwellSetup.exe
 ```
+
+There is no test suite. Verify changes by running the app manually and exercising the affected flow (browse, drag-drop, preview, PDF export, clipboard copy).
+
+Release process (build → Inno Setup → `gh release create`) is documented in `RELEASING.md`.
 
 ## Version
 
@@ -31,8 +38,11 @@ Version must be updated in **three places** before a release:
 - **converter/markdown_parser.py** — `md_to_html()` produces an HTML fragment; `wrap_html()` wraps it in a full document with CSS.
 - **converter/pdf_writer.py** — Registers bundled JetBrains Mono fonts with reportlab and xhtml2pdf, then renders HTML to PDF.
 - **converter/clipboard.py** — Inlines styles on HTML elements, converts `\n` to `<br>` in `<pre>` blocks, then builds a CF_HTML envelope for the Windows clipboard.
-- **ui/main_window.py** — Builds all widgets into the root window (not a Toplevel). Handles browse, drag-drop (via OLE drop target), preview, PDF export (Save As dialog, threaded), and clipboard copy.
+- **ui/main_window.py** — Builds all widgets directly into the root window, not a `Toplevel`. This was originally required for tkinterdnd2's `DnDWrapper`; it's kept because the current OLE drop target also benefits from a stable top-level HWND to register against. Handles browse, drag-drop, preview, PDF export (Save As dialog, threaded), and clipboard copy.
 - **utils/drop_target.py** — OLE IDropTarget implemented with ctypes. Handles Explorer file drops (CF_HDROP) and Outlook attachment drops (FileGroupDescriptorW/FileContents virtual-file protocol). Registers on all ancestor and child HWNDs of the root window.
+- **config.py + utils/paths.py + utils/logging_setup.py** — `ConfigManager` persists app config and logs under `%APPDATA%\Printwell\`. The Inno Setup uninstaller clears this directory, so do not store user data elsewhere.
+
+**Tray-to-UI thread safety:** The pystray icon runs in a daemon thread. Any UI work triggered from tray callbacks must be marshalled onto the Tk thread via `self._root.after(0, ...)` — see `PrintwellApp._show_window` / `_open_about`. Calling Tk widgets directly from the tray thread will crash or deadlock. The same rule applies to any future background threads (e.g. the PDF export worker in `main_window.py`).
 
 ## Critical Workarounds
 
