@@ -48,9 +48,16 @@ After creating the release, confirm:
 1. The release appears at https://github.com/parkscloud/Printwell/releases
 2. `PrintwellSetup.exe` is listed as a downloadable asset
 3. The "Installed version" link in README.md resolves to the releases page
+4. (Optional) Verify the installed build after a silent install:
+   - `HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{01969394-D605-4ACC-B3EA-D6BB89CD377D}_is1` → `DisplayVersion` matches the release
+   - The startup shortcut `%ProgramData%\Microsoft\Windows\Start Menu\Programs\StartUp\Printwell.lnk` targets `Printwell.exe` with arguments `--minimized` (read via `WScript.Shell` → `CreateShortcut`)
+   - Launching that shortcut starts Printwell tray-only (no visible window)
 
 ## Notes
 
 - The version in `installer.iss` (`AppVersion=`) should match the release tag
 - The version in `__init__.py` and `constants.py` should also match
+- **Never change `AppId` in `installer.iss`** — it is the app's permanent identity in Windows' registry; changing it orphans every existing install (one-time migration already paid in v1.0.3)
+- The uninstaller self-deletes asynchronously: when scripting uninstall → reinstall, poll for the uninstall registry key (and `Printwell.exe`) to disappear before running the new installer
+- Silent upgrades keep the user's original task selections; a silent install after an uninstall applies all default tasks (startup, file association, desktop shortcut) — pass `/TASKS=""` to skip
 - This file is tracked in the repo for portability

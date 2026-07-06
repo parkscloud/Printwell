@@ -22,9 +22,11 @@ build.bat                                                    # PyInstaller → d
 "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss # Inno Setup → installer_output\PrintwellSetup.exe
 ```
 
-There is no test suite. Verify changes by running the app manually and exercising the affected flow (browse, drag-drop, preview, PDF export, clipboard copy).
+There is no test suite. Verify changes by running the app manually and exercising the affected flow (browse, drag-drop, preview, PDF export, clipboard copy). Window-state behavior (tray/minimized/visible) can be verified programmatically: enumerate top-level windows for the app's PID via Win32 `EnumWindows`, filter window class `TkTopLevel`, and assert `IsWindowVisible`; confirm drag-drop coverage by counting "OLE drop target registered" lines in `%APPDATA%\Printwell\logs\printwell_YYYY-MM-DD.log` (27 HWNDs as of v1.0.3 — the count should match between normal and `--minimized` launches).
 
 Release process (build → Inno Setup → `gh release create`) is documented in `RELEASING.md`.
+
+ISCC emits a `UsedUserAreasWarning` (per-user areas used with `PrivilegesRequired=admin`) — expected, do not "fix": the uninstaller intentionally clears `%APPDATA%\Printwell`.
 
 ## Version
 
@@ -55,7 +57,7 @@ Version must be updated in **three places** before a release:
 
 **Clipboard styles (clipboard.py):** Word and Outlook ignore `<style>` blocks in pasted CF_HTML. All critical styles must be inlined on the elements themselves (`<pre>`, `<code>`, `<table>`, `<th>`, `<td>`, headings, blockquotes). Newlines in `<pre>` must be replaced with `<br>` or Word renders them as paragraph breaks with extra spacing.
 
-**Drag-and-drop (utils/drop_target.py):** OLE IDropTarget is implemented entirely with ctypes, bypassing pywin32's COM gateway (which wraps objects in a `DesignatedWrapPolicy` that doesn't forward vtable method calls). The drop target is registered on all ancestor and child HWNDs of the root window to ensure the correct window receives drag events regardless of customtkinter's internal window hierarchy. Supports both CF_HDROP (Explorer) and FileGroupDescriptorW/FileContents (Outlook virtual files).
+**Drag-and-drop (utils/drop_target.py):** OLE IDropTarget is implemented entirely with ctypes, bypassing pywin32's COM gateway (which wraps objects in a `DesignatedWrapPolicy` that doesn't forward vtable method calls). The drop target is registered on all ancestor and child HWNDs of the root window to ensure the correct window receives drag events regardless of customtkinter's internal window hierarchy. Supports both CF_HDROP (Explorer) and FileGroupDescriptorW/FileContents (Outlook virtual files). Before enumerating, `main_window._setup_drop_target` walks the widget tree calling `winfo_id()` to force HWND creation: a `--minimized` start leaves the window withdrawn and never mapped, so child HWNDs don't exist yet and `EnumChildWindows` would silently miss them, breaking drag-drop for tray-started sessions.
 
 ## PyInstaller Bundling
 
