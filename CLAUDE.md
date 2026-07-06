@@ -33,6 +33,8 @@ Version must be updated in **three places** before a release:
 2. `src/printwell/constants.py` — `APP_VERSION`
 3. `installer.iss` — `AppVersion`
 
+**Never change `AppId` in `installer.iss`.** The GUID (pinned in v1.0.3) is the app's permanent identity in Windows' Add/Remove Programs registry. Changing it makes Windows treat existing installs as a different product — upgrades stop being recognized and users must manually uninstall the orphaned entry.
+
 ## Architecture
 
 **Flow:** Markdown → HTML (markdown2) → PDF (xhtml2pdf) or clipboard (CF_HTML via win32clipboard).

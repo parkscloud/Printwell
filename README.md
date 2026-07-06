@@ -125,6 +125,11 @@ The installer is written to `installer_output\PrintwellSetup.exe`.
 
 ## Changelog
 
+### 1.0.3
+
+- **Pinned installer identity (AppId)** -- the installer now uses a permanent GUID instead of deriving its identity from the app name, so future upgrades and renames are always recognized as the same product
+- **One-time migration:** installs of 1.0.2 or earlier are not recognized by the new installer -- uninstall the old version from Add/Remove Programs (or `"C:\Program Files\Printwell\unins000.exe" /VERYSILENT`) before installing 1.0.3. All later upgrades install cleanly on top.
+
 ### 1.0.2
 
 - **Start minimized with Windows** -- the "Start Printwell with Windows" option now launches the app hidden in the system tray instead of opening the main window (new `--minimized` flag on the startup shortcut)

@@ -2,8 +2,11 @@
 ; Compile with Inno Setup 6+: iscc installer.iss
 
 [Setup]
+; Permanent identity of this app in Windows' registry -- never change this
+; GUID. Changing it orphans existing installs (see issue #2).
+AppId={{01969394-D605-4ACC-B3EA-D6BB89CD377D}
 AppName=Printwell
-AppVersion=1.0.2
+AppVersion=1.0.3
 AppPublisher=raparks@icloud.com
 AppPublisherURL=https://github.com/parkscloud/Printwell
 DefaultDirName={autopf}\Printwell
