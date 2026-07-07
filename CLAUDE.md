@@ -28,6 +28,16 @@ Release process (build → Inno Setup → `gh release create`) is documented in 
 
 ISCC emits a `UsedUserAreasWarning` (per-user areas used with `PrivilegesRequired=admin`) — expected, do not "fix": the uninstaller intentionally clears `%APPDATA%\Printwell`.
 
+## Workflow
+
+- Check `gh issue list --state all` before planning fixes or releases — the issue tracker is the backlog, and issues often spell out expected behavior and a preferred approach. Fold relevant open issues into scope or explicitly flag them as out of scope.
+- `Closes #N` in a commit message auto-closes the issue when pushed to master; post follow-up detail with `gh issue comment` (a later `gh issue close` fails as already-closed).
+- Durable, non-sensitive knowledge (gotchas, conventions, workflows, verification techniques) belongs in this file or `RELEASING.md` — not in Claude's machine-local memory. This repo is public: personal or sensitive context stays out of it.
+
+## Windows Shell Gotchas
+
+Windows PowerShell 5.1 does not escape embedded double quotes when building native command lines: a multi-line `git commit -m` message containing `"` gets truncated and its remainder parsed as pathspecs — and a `;`-chained `git push` runs anyway on the failed commit. Write commit messages from Git Bash with a quoted heredoc (`git commit -m "$(cat <<'EOF' ... EOF)"`), and only chain push with `&&`.
+
 ## Version
 
 Version must be updated in **three places** before a release:
@@ -71,3 +81,5 @@ This project matches **Hearsay** (parkscloud/Hearsay) in code style, README stru
 - Type hints throughout, `Path` over string paths
 - customtkinter dark theme + blue color scheme
 - PDF code blocks: white background, dark text, no borders (not dark theme)
+- When in doubt, check Hearsay's equivalent file for the reference implementation before writing new code or docs
+- New sibling tools: research name conflicts (GitHub, PyPI, general web presence) before committing to a name
